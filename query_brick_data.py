@@ -68,26 +68,21 @@ query1 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?equipment ?type
+SELECT ?value
 WHERE {
-?equipment a ?type .
-FILTER (?type != brick:Zone)
-FILTER EXISTS { ?equipment brick:hasPoint|brick:hasPart|brick:feeds ?x }
+  bldg:RM_TEMP brick:value ?value .
 }
-ORDER BY ?type
 """
 
-# Example Query 2: Get all sensor points associated with the FCU
+# Example Query 2: Get outdoor air temperature data points from FCU_OAT
 query2 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?point ?pointType
+SELECT ?sensor ?sensorType
 WHERE {
-    bldg:FCU_OAT brick:hasPoint ?point .
-    ?point a ?pointType .
+  ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
-ORDER BY ?pointType
 """
 
 # Example Query 3: Get all components of the FCU and their types
@@ -95,10 +90,12 @@ query3 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?component ?componentType
+SELECT ?currentTemp ?heatingSetpoint ?coolingSetpoint 
+       (IF(?currentTemp >= ?heatingSetpoint && ?currentTemp <= ?coolingSetpoint, "Yes", "No") AS ?withinSetpoints)
 WHERE {
-    bldg:FCU brick:hasPart ?component .
-    ?component a ?componentType .
+  bldg:RM_TEMP brick:value ?currentTemp .
+  bldg:RMHTGSPT brick:value ?heatingSetpoint .
+  bldg:RMCLGSPT brick:value ?coolingSetpoint .
 }
 """
 
@@ -107,10 +104,15 @@ query4 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?sensor ?sensorType
+SELECT ?location ?temperature
 WHERE {
-    ?sensor a ?sensorType .
-    FILTER(CONTAINS(STR(?sensorType), "Temperature_Sensor"))
+  VALUES (?sensor ?location) {
+    (bldg:FCU_OAT "Outdoor Air")
+    (bldg:FCU_RAT "Return Air")
+    (bldg:FCU_MAT "Mixed Air")
+    (bldg:FCU_DAT "Discharge Air")
+  }
+  ?sensor brick:value ?temperature .
 }
 """
 
@@ -119,13 +121,10 @@ query5 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?equipment ?component ?point ?pointType
+SELECT ?sensor ?sensorType
 WHERE {
-    bldg:FCU brick:hasPart ?component .
-    ?component brick:hasPoint ?point .
-    ?point a ?pointType .
+  ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
-ORDER BY ?component
 """
 
 # Example Query 6: Get all points related to the cooling coil
@@ -133,12 +132,30 @@ query6 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
-SELECT ?point ?pointType
+SELECT ?sensor ?sensorType
 WHERE {
-    bldg:Cooling_coil brick:hasPoint ?point .
-    ?point a ?pointType .
+  ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
 """
+
+
+query = """
+  PREFIX brick: <https://brickschema.org/schema/Brick#>
+  PREFIX bldg: <bldg-59#>
+  PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+  SELECT ?timestamp ?value
+  WHERE {
+      bldg:FCU_OAT brick:hasPoint ?point .
+      ?point ref:timestamp ?timestamp .
+      ?point ref:value ?value .
+  }
+  ORDER BY ?timestamp
+  LIMIT 100
+  """
+
+
+run_query("1. Get all equipment in the building", query)
 
 
 if __name__ == "__main__":
@@ -148,7 +165,7 @@ if __name__ == "__main__":
 
     # Run all example queries
     run_query("1. Get all equipment in the building", query1)
-    run_query("2. Get all sensor points of the FCU", query2)
+    run_query("2. Get outdoor air temperature data points from FCU_OAT", query2)
     run_query("3. Get all components of the FCU", query3)
     run_query("4. Get all temperature sensors", query4)
     run_query("5. Get equipment hierarchy (FCU -> components -> points)", query5)
