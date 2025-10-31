@@ -12,13 +12,13 @@ import pandas as pd
 g_temp = Graph()
 g = Graph()
 
-# TTL 파일 로드
-ttl_file = "LBNL_FDD_Data_Sets_FCU_ttl.ttl"
+# Load TTL file
+ttl_file = "LBNL_FDD_Data_Sets_FCU_ttl.ttl" ### TTL File Directory
 print("Loading TTL file...")
 g_temp.parse(ttl_file, format="turtle")
 print(f"Loaded {len(g_temp)} triples from TTL")
 
-# 상대 경로 namespace 정의
+# Define relative path namespaces
 BLDG = Namespace("bldg-59#")
 BRICK = Namespace("https://brickschema.org/schema/Brick#")
 REF = Namespace("https://brickschema.org/schema/Brick/ref#")
@@ -27,31 +27,31 @@ g.bind("brick", BRICK)
 g.bind("bldg", BLDG)
 g.bind("ref", REF)
 
-# TTL의 절대 경로를 상대 경로로 변환
+# Convert absolute URIs from TTL to relative URIs
 print("Converting absolute URIs to relative URIs...")
 converted = 0
 for s, p, o in g_temp:
-    # Subject 변환
+    # Convert subject
     if isinstance(s, URIRef) and "bldg-59#" in str(s):
         local_name = str(s).split("#")[-1]
         s = BLDG[local_name]
         converted += 1
-    
-    # Object 변환
+
+    # Convert object
     if isinstance(o, URIRef) and "bldg-59#" in str(o):
         local_name = str(o).split("#")[-1]
         o = BLDG[local_name]
         converted += 1
-    
+
     g.add((s, p, o))
 
 print(f"Converted {converted} URIs")
 print(f"Total triples: {len(g)}")
 print(f"Using namespace: {BLDG}\n")
 
-# 이제 CSV 데이터 추가 (기존 코드 동일)
+# Now add CSV data (timeseries observations)
 MAX_ROWS = 100
-csv_file = "LBNL_FDD_Dataset_FCU/FCU_FaultFree.csv"
+csv_file = "LBNL_FDD_Dataset_FCU/FCU_FaultFree.csv" ### csv File Directory
 
 print(f"Loading CSV: {csv_file}")
 df = pd.read_csv(csv_file, nrows=MAX_ROWS)
@@ -120,7 +120,7 @@ def run_query(query_name, query_string):
 # LIMIT 20
 # """
 
-# Query 1: Get room temperature
+# Query 1: Show me room temperature over time
 query1 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
@@ -137,7 +137,7 @@ LIMIT 100
 """
 
 
-# Query 2: Get all observations for a specific sensor
+# Query 2: Get outdoor air temperature data
 query2 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
@@ -153,7 +153,7 @@ ORDER BY ?timestamp
 LIMIT 10
 """
 
-# Query 3: Get values from multiple temperature sensors at the same time
+# Query 3: What is the discharge air temperature?
 query3 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
@@ -171,7 +171,7 @@ ORDER BY ?timestamp
 LIMIT 10
 """
 
-# Query 4: Get all sensors related to cooling coil with their values
+# Query 4: Show me all entering water temperature sensors
 query4 = """
 
 PREFIX brick: <https://brickschema.org/schema/Brick#>
@@ -189,7 +189,8 @@ ORDER BY ?sensor ?timestamp
 LIMIT 20
 """
 
-query4_2 = """
+# Query 5: Show me the water temperature entering the cooling coil
+query5 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
@@ -203,8 +204,8 @@ WHERE {
 LIMIT 10
 """
 
-# Query 5: Find when room temperature was outside setpoint range
-query5 = """
+# Query 6: Show me when the room temperature was outside the setpoint range
+query6 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
@@ -232,8 +233,8 @@ WHERE {
 ORDER BY ?timestamp
 """
 
-# Query 6: Get average values for all temperature sensors
-query6 = """
+# Query 7: What are the operating ranges for each temperature sensor?
+query7 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
@@ -251,7 +252,9 @@ WHERE {
 GROUP BY ?sensor
 ORDER BY ?sensor
 """
-query_check_schema = """
+
+# Query 8: Show me all the sensors monitoring water entering the system
+query8 = """
 PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 
@@ -260,7 +263,23 @@ WHERE {
   ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
 """
-run_query("Check if schema loaded", query_check_schema)
+run_query("8. Check if schema loaded (find Entering Water Temp sensors)", query8)
+
+query9 = """
+
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?value
+WHERE {
+  bldg:FCU_CTRL ref:hasObservation ?obs .
+  ?obs ref:hasTimestamp ?timestamp .
+  ?obs ref:hasValue ?value .
+}
+ORDER BY ?timestamp
+LIMIT 10
+"""
 
 
 # Run all example queries
@@ -269,14 +288,15 @@ if __name__ == "__main__":
     print("SPARQL QUERIES WITH TIMESERIES DATA")
     print("="*80)
 
-    run_query("1. Get Entering Water Temperature Sensor values", query1)
-    run_query("2. Get all observations for FCU_OAT sensor", query2)
-    run_query("3. Get values from multiple temperature sensors", query3)
-    run_query("4. Get cooling coil sensor values", query4)
-    run_query("4. Get cooling coil sensor values", query4_2)
-    run_query("5. Find when room temp was outside setpoint range", query5)
-    run_query("6. Get average/min/max for all temperature sensors", query6)
-    run_query("6. Get average/min/max for all temperature sensors", query_check_schema)
+    # run_query("1. Get room temperature (RM_TEMP) values", query1)
+    # run_query("2. Get all observations for FCU_OAT sensor", query2)
+    # run_query("3. Get discharge air temperature (FCU_DAT)", query3)
+    # run_query("4. Get all Entering Water Temperature Sensors", query4)
+    # run_query("5. Get cooling coil entering water temp (FCU_CLG_EWT)", query5)
+    # run_query("6. Find when room temp was outside setpoint range", query6)
+    # run_query("7. Get average/min/max for all temperature sensors", query7)
+    # run_query("8. Check if schema is loaded by finding Entering Water Temperature Sensors", query8)
+    run_query("9. ", query9)
 
     print("\n" + "="*80)
     print("DONE!")

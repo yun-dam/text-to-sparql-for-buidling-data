@@ -1,0 +1,218 @@
+# instruction
+Your task is to write a Brick Schema SPARQL query to answer the given question about building data. Follow a step-by-step process:
+
+1. Start by constructing very simple fragments of the SPARQL query.
+2. Execute each fragment to verify its correctness. Adjust as needed based on your observations.
+3. Confirm all your assumptions about the Brick schema structure before proceeding.
+4. Gradually build the complete SPARQL query by adding one piece at a time.
+5. Do NOT repeat the same action, as the results will be the same.
+6. The question is about building sensors, equipment, or timeseries data, so continue until you find it.
+7. For timeseries data, remember to use ref:hasObservation, ref:hasValue, and ref:hasTimestamp properties.
+8. In the final SPARQL projections, select the actual values needed to answer the question.
+
+Form exactly one "Thought" and perform exactly one "Action", then wait for the "Observation".
+
+Possible actions are:
+
+- search_brick(string): Searches Brick schema for sensors, equipment, or points matching the given string.
+- get_brick_entity(entity_id): Retrieves all properties and relationships of a specified Brick entity (e.g., RM_TEMP, FCU_OAT).
+- get_property_examples(property_name): Provides examples demonstrating the use of a specific property (e.g., hasObservation, feeds).
+- execute_sparql(SPARQL): Runs a SPARQL query on the Brick graph and returns results.
+- stop(): Marks the last executed SPARQL query as the final answer and ends the process.
+
+Key Brick Schema patterns:
+- Sensors have observations: ?sensor ref:hasObservation ?obs
+- Observations have values: ?obs ref:hasValue ?value
+- Observations have timestamps: ?obs ref:hasTimestamp ?timestamp
+- Entity types use brick: namespace (e.g., brick:Temperature_Sensor)
+- Building entities use bldg: namespace (e.g., bldg:RM_TEMP)
+
+About this dataset (LBNL FDD FCU Data):
+This dataset contains Fan Coil Unit (FCU) sensor data from LBNL Fault Detection and Diagnostics research.
+
+Key sensors available:
+- RM_TEMP: Room temperature sensor
+- RMHTGSPT: Room heating setpoint
+- RMCLGSPT: Room cooling setpoint
+- FCU_OAT: Outdoor air temperature
+- FCU_DAT: Discharge air temperature
+- FCU_CLG_EWT: Cooling coil entering water temperature
+- FCU_CLG_LWT: Cooling coil leaving water temperature
+- FCU_HTG_EWT: Heating coil entering water temperature
+- FCU_HTG_LWT: Heating coil leaving water temperature
+- FCU_FAN_SPD: Fan speed
+- FCU_CLG_VLV_POS: Cooling valve position
+- FCU_HTG_VLV_POS: Heating valve position
+
+Common query patterns for this dataset:
+- To get current/latest values: Use LIMIT 1 or LIMIT 10
+- To analyze trends: Include timestamps and ORDER BY ?timestamp
+- To compare setpoints vs actual: Query both RM_TEMP and RMHTGSPT/RMCLGSPT together
+- To check equipment status: Query valve positions and fan speed
+
+HVAC domain knowledge:
+- FCU (Fan Coil Unit) is a device that heats or cools a room
+- EWT = Entering Water Temperature (water going into coil)
+- LWT = Leaving Water Temperature (water coming out of coil)
+- Valve positions (0-100%) control water flow through heating/cooling coils
+- Temperature sensors typically report in Fahrenheit or Celsius
+
+Below are few-shot Text-to-SPARQL samples for the Brick dataset.
+
+Sample 1
+Question: Show me room temperature over time
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?temperature
+WHERE {
+bldg:RM_TEMP ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?temperature .
+}
+ORDER BY ?timestamp
+LIMIT 100
+
+Sample 2
+Question: Get outdoor air temperature data
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?value
+WHERE {
+bldg:FCU_OAT ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?value .
+}
+ORDER BY ?timestamp
+LIMIT 10
+
+Sample 3
+Question: What is the discharge air temperature?
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?oat ?rat ?dat ?mat
+WHERE {
+bldg:FCU_DAT ref:hasObservation ?obs3 .
+?obs3 ref:hasTimestamp ?timestamp .
+?obs3 ref:hasValue ?dat .
+}
+ORDER BY ?timestamp
+LIMIT 10
+
+Sample 4
+Question: Show me all entering water temperature sensors
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?sensor ?timestamp ?value
+WHERE {
+?sensor a brick:Entering_Water_Temperature_Sensor .
+?sensor ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?value .
+}
+ORDER BY ?sensor ?timestamp
+LIMIT 20
+
+Sample 5
+Question: Show me the water temperature entering the cooling coil
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?value
+WHERE {
+bldg:FCU_CLG_EWT ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?value .
+}
+LIMIT 10
+
+Sample 6
+Question: Show me when the room temperature was outside the setpoint range
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?roomTemp ?heatingSetpoint ?coolingSetpoint
+WHERE {
+bldg:RM_TEMP ref:hasObservation ?obs1 .
+?obs1 ref:hasTimestamp ?timestamp .
+?obs1 ref:hasValue ?roomTemp .
+
+bldg:RMHTGSPT ref:hasObservation ?obs2 .
+?obs2 ref:hasTimestamp ?timestamp .
+?obs2 ref:hasValue ?heatingSetpoint .
+
+bldg:RMCLGSPT ref:hasObservation ?obs3 .
+?obs3 ref:hasTimestamp ?timestamp .
+?obs3 ref:hasValue ?coolingSetpoint .
+
+FILTER(?roomTemp < ?heatingSetpoint || ?roomTemp > ?coolingSetpoint)
+}
+ORDER BY ?timestamp
+
+Sample 7
+Question: What are the operating ranges for each temperature sensor?
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?sensor (AVG(?value) AS ?avgValue) (MIN(?value) AS ?minValue) (MAX(?value) AS ?maxValue)
+WHERE {
+?sensor a ?sensorType .
+FILTER(CONTAINS(STR(?sensorType), "Temperature_Sensor"))
+
+?sensor ref:hasObservation ?obs .
+?obs ref:hasValue ?value .
+}
+GROUP BY ?sensor
+ORDER BY ?sensor
+
+Sample 8
+Question: Show me all the sensors monitoring water entering the system
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+
+SELECT ?sensor ?type
+WHERE {
+?sensor a brick:Entering_Water_Temperature_Sensor .
+}
+
+
+# distillation instruction
+Think and perform the next action.
+
+# input
+{% for i in range(0, conversation_history|length) %}
+User Question: {{ conversation_history[i]["question"] }}
+{% for j in range(0, conversation_history[i]["action_history"]|length) %}
+{{ conversation_history[i]["action_history"][j] }}
+{% endfor %}
+--
+{% endfor %}
+
+User Question: {{ question }}
+
+{% if action_history %}
+{% for i in range(0, action_history|length) %}
+
+{{ action_history[i] }}
+{% endfor %}
+{% endif %}
+
+Output one "Thought" and one "Action":
