@@ -30,19 +30,46 @@ Key Brick Schema patterns:
 About this dataset (LBNL FDD FCU Data):
 This dataset contains Fan Coil Unit (FCU) sensor data from LBNL Fault Detection and Diagnostics research.
 
-Key sensors available:
-- RM_TEMP: Room temperature sensor
-- RMHTGSPT: Room heating setpoint
-- RMCLGSPT: Room cooling setpoint
-- FCU_OAT: Outdoor air temperature
-- FCU_DAT: Discharge air temperature
-- FCU_CLG_EWT: Cooling coil entering water temperature
-- FCU_CLG_LWT: Cooling coil leaving water temperature
-- FCU_HTG_EWT: Heating coil entering water temperature
-- FCU_HTG_LWT: Heating coil leaving water temperature
-- FCU_FAN_SPD: Fan speed
-- FCU_CLG_VLV_POS: Cooling valve position
-- FCU_HTG_VLV_POS: Heating valve position
+Key sensors available (FCU Dataset):
+Basic/Essential Points (marked Y in dataset):
+- FCU_CTRL: FCU control modes (0-Shutdown, 1-Operate, 2-Setback)
+- RM_TEMP: Room temperature (°F)
+- RMCLGSPT: Room cooling setpoint (°F)
+- RMHTGSPT: Room heating setpoint (°F)
+- FCU_CVLV_DM: FCU cooling coil valve control signal/command (0-1)
+- FCU_HVLV_DM: FCU heating coil valve control signal/command (0-1)
+- FCU_SPD: FCU fan speed (rev/s)
+
+All Available Sensors:
+- FCU_CTRL: FCU control modes (0-Shutdown, 1-Operate, 2-Setback)
+- FAN_CTRL: FCU fan operation mode (1-Auto, 2-Off)
+- RM_TEMP: Room temperature (°F)
+- RMCLGSPT: Room cooling setpoint (°F)
+- RMHTGSPT: Room heating setpoint (°F)
+- FCU_MAT: FCU mixed air temperature (°F)
+- FCU_DAT: FCU discharge air temperature (°F)
+- FCU_RAT: FCU return air temperature (°F)
+- FCU_CVLV: FCU cooling coil valve position (0-1)
+- FCU_CVLV_DM: FCU cooling coil valve control signal/command (0-1)
+- FCU_CLG_GPM: FCU cooling coil water flow rate (GPM)
+- FCU_CLG_EWT: FCU cooling coil entering water temperature (°F)
+- FCU_CLG_RWT: FCU cooling coil return water temperature (°F)
+- FCU_HVLV: FCU heating coil valve position (0-1)
+- FCU_HVLV_DM: FCU heating coil valve control signal/command (0-1)
+- FCU_HTG_GPM: FCU heating coil water flow rate (GPM)
+- FCU_HTG_EWT: FCU heating coil entering water temperature (°F)
+- FCU_HTG_RWT: FCU heating coil return water temperature (°F)
+- FCU_DA_CFM: FCU discharge air flow rate (CFM)
+- FCU_OA_CFM: FCU outdoor air flow rate (CFM)
+- FCU_DMPR: FCU mixed air damper position (0-1)
+- FCU_DMPR_DM: FCU mixed air damper control signal/command (0-1)
+- FCU_SPD: FCU fan speed (rev/s)
+- FCU_OAT: FCU outdoor air temperature (°F)
+- FCU_WAT: FCU fan power consumption (Watt)
+- FCU_MA_HUMD: FCU mixed air humidity (%RH)
+- FCU_OA_HUMD: FCU outdoor air humidity (%RH)
+- FCU_DA_HUMD: FCU discharge air humidity (%RH)
+- FCU_RA_HUMD: FCU return air humidity (%RH)
 
 Common query patterns for this dataset:
 - To get current/latest values: Use LIMIT 1 or LIMIT 10

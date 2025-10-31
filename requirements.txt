@@ -1,1 +1,57 @@
-rdflib==7.0.0
+# Brick Agent Framework - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core RDF and SPARQL
+rdflib>=7.1.1
+
+# Data processing
+pandas>=2.2.3
+numpy>=1.26.4
+
+# LLM Framework - Updated to latest versions
+chainlite>=0.2.0
+langchain>=0.3.13
+langchain-community>=0.3.13
+langchain-core>=0.3.28
+langchain-text-splitters>=0.3.2
+langgraph>=0.2.59
+langsmith>=0.2.7
+litellm>=1.52.14
+
+# LLM providers (choose what you need)
+openai>=1.57.4
+anthropic>=0.40.0  # Uncommented - Claude API support
+google-generativeai>=0.8.3  # Added for Gemini support
+
+# Utilities
+pydantic>=2.10.4
+pydantic-settings>=2.7.0  # Added for better settings management
+python-dotenv>=1.0.1
+PyYAML>=6.0.2
+tiktoken>=0.8.0
+tenacity>=9.0.0
+aiohttp>=3.11.11  # Added for async HTTP requests
+requests>=2.32.3
+
+# Development and testing
+pytest>=8.3.4
+pytest-asyncio>=0.25.2
+pytest-cov>=6.0.0  # Added for test coverage
+jupyter>=1.1.1
+notebook>=7.3.2  # Added for Jupyter notebook interface
+ipykernel>=6.29.5
+
+# Optional: Caching
+redis>=5.2.1
+hiredis>=3.0.0  # Added for better Redis performance
+
+# Optional: NLP
+# spacy>=3.8.3  # Uncomment if needed
+
+# Optional: Evaluation
+# datasets>=3.2.0  # Uncomment if needed
+# evaluate>=0.4.3   # Uncomment if needed
+
+# Optional: Logging and monitoring
+# wandb>=0.19.1  # Uncomment for experiment tracking
+# loguru>=0.7.3  # Uncomment for better logging
