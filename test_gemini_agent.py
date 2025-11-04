@@ -92,28 +92,45 @@ def test_with_gemini():
     agent.initialize_graph(
         ttl_file="LBNL_FDD_Data_Sets_FCU_ttl.ttl",
         csv_file="LBNL_FDD_Dataset_FCU/FCU_FaultFree.csv",
-        max_csv_rows=50
+        max_csv_rows=60000
     )
     print("Data loaded successfully!")
 
-    # Get question from user input
+    # Interactive loop for continuous questions
     print("\n" + "="*80)
-    user_question = input("Enter your question about the Brick data: ").strip()
-
-    while not user_question:
-        print("⚠️  Question cannot be empty. Please try again.")
-        user_question = input("Enter your question about the Brick data: ").strip()
-
-    questions = [user_question]
+    print("Ask questions about the building data.")
+    print("Type 'exit', 'quit', or 'q' to end the session.")
     print("="*80)
 
-    for i, question in enumerate(questions, 1):
+    question_count = 0
+
+    while True:
+        # Get question from user input
+        print()
+        try:
+            user_question = input("Your question: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n\nExiting session...")
+            break
+
+        # Check for exit commands
+        if user_question.lower() in ['exit', 'quit', 'q', '']:
+            print("\nExiting session...")
+            break
+
+        # Skip empty questions
+        if not user_question:
+            print("⚠️  Question cannot be empty. Please try again.")
+            continue
+
+        question_count += 1
+
         print(f"\n{'='*80}")
-        print(f"Question {i}: {question}")
+        print(f"Question {question_count}: {user_question}")
         print("="*80)
 
         try:
-            state, final_sparql = agent.run(question, verbose=True)
+            state, final_sparql = agent.run(user_question, verbose=True)
 
             if final_sparql and final_sparql.has_results():
                 print(f"\n✅ SUCCESS!")
@@ -128,8 +145,11 @@ def test_with_gemini():
             import traceback
             traceback.print_exc()
 
+        print("\n" + "-"*80)
+        print("Ready for next question!")
+
     print("\n" + "="*80)
-    print("Test completed!")
+    print(f"Session completed! Answered {question_count} questions.")
     print("="*80)
     print(f"\n📊 Check {LOG_FILE} for detailed logs")
     print(f"📊 Also check prompt_logs_*.jsonl for LLM call logs")

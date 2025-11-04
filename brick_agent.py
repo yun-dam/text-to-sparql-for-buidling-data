@@ -219,6 +219,10 @@ class BrickAgent:
             from vertexai.generative_models import GenerativeModel
             import vertexai
             from datetime import datetime
+            import time
+
+            # Rate limiting: Add delay to avoid 429 errors
+            time.sleep(1.5)  # 1.5 second delay between API calls
 
             # Initialize Vertex AI
             vertexai.init(project="cs224v-yundamko", location="us-central1")
@@ -313,14 +317,10 @@ class BrickAgent:
             flags=re.IGNORECASE
         )
 
-        # Fix 1: Unclosed parentheses in ORDER BY DESC/ASC
-        # Pattern: ORDER BY (DESC|ASC)\(\?var without closing )
-        fixed = re.sub(
-            r'ORDER\s+BY\s+(DESC|ASC)\s*\(\s*\?(\w+)\s*(?!\))',
-            r'ORDER BY \1(?\2)',
-            fixed,
-            flags=re.IGNORECASE
-        )
+        # Fix 1: DISABLED - Modern LLMs generate correct ORDER BY syntax
+        # (This regex was causing issues by incorrectly "fixing" already-correct queries)
+        # If you encounter ORDER BY DESC(?var without ), the LLM should be retrained
+        pass
 
         # Fix 2: Add LIMIT if using ORDER BY DESC (for "latest" queries) and no LIMIT exists
         if re.search(r'ORDER\s+BY\s+DESC', fixed, re.IGNORECASE) and \
@@ -581,7 +581,7 @@ def ask_brick(question: str, ttl_file: str = None, csv_file: str = None, verbose
 
 
 if __name__ == "__main__":
-    # Example usage
+    # Interactive session with Brick Agent
     print("Brick Agent - Iterative framework for Brick SPARQL generation")
     print("="*80)
 
@@ -589,12 +589,34 @@ if __name__ == "__main__":
     agent = BrickAgent(engine="gemini-flash")
 
     # Load Brick schema and timeseries data
+    print("\nLoading Brick schema and timeseries data...")
     agent.initialize_graph(
         ttl_file="LBNL_FDD_Data_Sets_FCU_ttl.ttl",
         csv_file="LBNL_FDD_Dataset_FCU/FCU_FaultFree.csv",
-        max_csv_rows=100
+        max_csv_rows=1000  # Load last 1000 rows (most recent data from Dec 2018)
     )
+    print("Data loaded successfully!\n")
 
-    # Ask a question
-    question = "What are the room temperature values?"
-    state, final_sparql = agent.run(question, verbose=True)
+    # Interactive loop
+    print("Ask questions about the building data.")
+    print("Type 'exit', 'quit', or 'q' to end the session.\n")
+
+    while True:
+        # Get question from user
+        try:
+            question = input("Your question: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n\nExiting session...")
+            break
+
+        # Check for exit commands
+        if question.lower() in ['exit', 'quit', 'q', '']:
+            print("\nExiting session...")
+            break
+
+        # Process the question
+        state, final_sparql = agent.run(question, verbose=True)
+
+        # Optionally show summary
+        print("\n" + "-"*80)
+        print("Ready for next question!\n")

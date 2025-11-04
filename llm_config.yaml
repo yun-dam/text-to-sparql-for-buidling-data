@@ -1,0 +1,18 @@
+prompt_dirs:
+  - "./prompts"                           # Brick Agent prompts
+  - "./spinach/prompts"                   # Original SPINACH prompts
+  - "./spinach/spinach_agent/prompts"     # Original SPINACH agent prompts
+
+litellm_set_verbose: false
+
+prompt_logging:
+  log_file: "./prompt_logs.jsonl"
+
+# Google Gemini / Vertex AI Configuration
+llm_endpoints:
+  - vertex_project: cs224v-yundamko       # Your GCP project ID
+    vertex_location: us-central1          # GCP region
+    engine_map:
+      gemini-flash: vertex_ai/gemini-2.0-flash-exp
+      gemini-pro: vertex_ai/gemini-1.5-pro-002
+      gemini-flash-lite: vertex_ai/publishers/google/models/gemini-2.5-flash-lite

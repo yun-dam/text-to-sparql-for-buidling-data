@@ -1,0 +1,20 @@
+# Brick Agent API Keys Configuration - GOOGLE GEMINI / VERTEX AI
+# ================================================================
+# This project is configured to use Google Gemini via Vertex AI
+# Add your Google Cloud project information below
+
+# Google Cloud Project ID
+# Find this in your GCP Console: https://console.cloud.google.com
+VERTEX_PROJECT_ID=cs224v-yundamko
+
+# Google Cloud Region/Location
+# Common options: us-central1, us-east1, europe-west1, asia-northeast1
+VERTEX_LOCATION=us-central1
+
+# =====================================
+# IMPORTANT:
+# - Replace the values above with your actual GCP project info
+# - Make sure you have authenticated with Google Cloud (gcloud auth application-default login)
+# - Do NOT commit the API_KEYS file to git (rename from API_KEYS_TEMPLATE to API_KEYS)
+# - The API_KEYS file should already be in .gitignore
+# =====================================

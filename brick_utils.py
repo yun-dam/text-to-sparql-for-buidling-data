@@ -98,15 +98,23 @@ class BrickGraph:
 
         Args:
             csv_file: Path to CSV file
-            max_rows: Maximum rows to load
+            max_rows: Maximum rows to load (loads LAST N rows to get recent data)
         """
         import pandas as pd
 
-        df = pd.read_csv(csv_file, nrows=max_rows)
-        print(f"Loading {len(df)} rows from {csv_file}")
+        # Load last N rows to get most recent data
+        df_full = pd.read_csv(csv_file)
+        df = df_full.tail(max_rows)
+        print(f"Loading last {len(df)} rows from {csv_file} (total: {len(df_full)} rows)")
+        print(f"Date range: {df['Datetime'].iloc[0]} to {df['Datetime'].iloc[-1]}")
 
         for idx, row in df.iterrows():
             timestamp_str = row['Datetime']
+
+            # Convert timestamp from "12/31/2018 23:59" to ISO format for proper sorting
+            from datetime import datetime
+            dt = datetime.strptime(timestamp_str, "%m/%d/%Y %H:%M")
+            timestamp_iso = dt.strftime("%Y-%m-%dT%H:%M:%S")
 
             for column_name in df.columns:
                 if column_name == 'Datetime':
@@ -120,7 +128,7 @@ class BrickGraph:
                 sensor_uri = BLDG[column_name]
 
                 self._graph.add((sensor_uri, REF.hasObservation, obs_uri))
-                self._graph.add((obs_uri, REF.hasTimestamp, Literal(timestamp_str, datatype=XSD.string)))
+                self._graph.add((obs_uri, REF.hasTimestamp, Literal(timestamp_iso, datatype=XSD.dateTime)))
                 self._graph.add((obs_uri, REF.hasValue, Literal(float(value), datatype=XSD.float)))
 
         print(f"Added timeseries data. Total triples: {len(self._graph)}")

@@ -43,9 +43,9 @@ Basic/Essential Points (marked Y in dataset):
 All Available Sensors:
 - FCU_CTRL: FCU control modes (0-Shutdown, 1-Operate, 2-Setback)
 - FAN_CTRL: FCU fan operation mode (1-Auto, 2-Off)
-- RM_TEMP: Room temperature (°F)
-- RMCLGSPT: Room cooling setpoint (°F)
-- RMHTGSPT: Room heating setpoint (°F)
+- RM_TEMP: Rooma air temperature (°F)
+- RMCLGSPT: Room cooling setpoint temperature (°F)
+- RMHTGSPT: Room heating setpoint temperature (°F)
 - FCU_MAT: FCU mixed air temperature (°F)
 - FCU_DAT: FCU discharge air temperature (°F)
 - FCU_RAT: FCU return air temperature (°F)
@@ -72,10 +72,17 @@ All Available Sensors:
 - FCU_RA_HUMD: FCU return air humidity (%RH)
 
 Common query patterns for this dataset:
-- To get current/latest values: Use LIMIT 1 or LIMIT 10
-- To analyze trends: Include timestamps and ORDER BY ?timestamp
-- To compare setpoints vs actual: Query both RM_TEMP and RMHTGSPT/RMCLGSPT together
+- To get current/latest values: Use ORDER BY DESC(?timestamp) LIMIT 1
+- To get recent/latest N values: Use ORDER BY DESC(?timestamp) LIMIT N
+- To analyze trends over time: Use ORDER BY ?timestamp (ascending)
 - To check equipment status: Query valve positions and fan speed
+
+IMPORTANT - Temporal Query Keywords:
+When you see these keywords in questions, use the corresponding SPARQL pattern:
+- "latest", "most recent", "current", "now" → ORDER BY DESC(?timestamp) LIMIT 1
+- "recent 10", "last 10", "10 latest" → ORDER BY DESC(?timestamp) LIMIT 10
+- "first 10", "oldest 10" → ORDER BY ?timestamp LIMIT 10
+- "over time", "trend", "history" → ORDER BY ?timestamp LIMIT 100
 
 HVAC domain knowledge:
 - FCU (Fan Coil Unit) is a device that heats or cools a room
@@ -219,6 +226,58 @@ SELECT ?sensor ?type
 WHERE {
 ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
+
+Sample 9 (TEMPORAL QUERY - LATEST)
+Question: What is the latest room temperature?
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?temperature
+WHERE {
+bldg:RM_TEMP ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?temperature .
+}
+ORDER BY DESC(?timestamp)
+LIMIT 1
+
+Sample 10 (TEMPORAL QUERY - RECENT N)
+Question: Show me the 10 most recent FCU damper position readings
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?value
+WHERE {
+bldg:FCU_DMPR ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?value .
+}
+ORDER BY DESC(?timestamp)
+LIMIT 10
+
+Sample 11 (TEMPORAL QUERY - RECENT WITH MULTIPLE SENSORS)
+Question: What are the latest cooling and heating valve positions?
+Answer (SPARQL):
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?cooling_valve ?heating_valve
+WHERE {
+bldg:FCU_CVLV ref:hasObservation ?obs1 .
+?obs1 ref:hasTimestamp ?timestamp .
+?obs1 ref:hasValue ?cooling_valve .
+
+bldg:FCU_HVLV ref:hasObservation ?obs2 .
+?obs2 ref:hasTimestamp ?timestamp .
+?obs2 ref:hasValue ?heating_valve .
+}
+ORDER BY DESC(?timestamp)
+LIMIT 1
 
 
 # distillation instruction

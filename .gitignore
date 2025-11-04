@@ -1,0 +1,50 @@
+# Sensitive files - NEVER commit these!
+API_KEYS
+*.key
+*.secret
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and outputs
+*.log
+prompt_logs.jsonl
+*.jsonl
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# Data files (large datasets - configure based on your needs)
+# Uncomment if you don't want to commit data files:
+# *.csv
+# *.ttl
+# *.pdf
+# LBNL_FDD_Dataset_FCU/
+
+# External libraries (if you cloned SPINACH as reference)
+# Uncomment if you don't want to include SPINACH:
+# spinach/
+
+# Temporary files
+*.tmp
+*.bak
+.cache/

@@ -1,0 +1,85 @@
+# LLM Configuration Examples
+# Copy the section you want to use into llm_config.yaml
+
+# ============================================================================
+# OPTION 1: OpenAI (Recommended - Simplest)
+# ============================================================================
+prompt_dirs:
+  - "./prompts"
+  - "./spinach/prompts"
+  - "./spinach/spinach_agent/prompts"
+
+litellm_set_verbose: false
+
+prompt_logging:
+  log_file: "./prompt_logs.jsonl"
+
+llm_endpoints:
+  - api_base: https://api.openai.com/v1
+    api_key: OPENAI_API_KEY
+    engine_map:
+      gpt-4o: gpt-4o                          # Latest, most capable
+      gpt-4: gpt-4-turbo-2024-04-09          # Slightly cheaper
+      gpt-3.5-turbo: gpt-3.5-turbo-0125      # Cheapest, fastest
+
+
+# ============================================================================
+# OPTION 2: Anthropic Claude
+# ============================================================================
+# llm_endpoints:
+#   - api_base: https://api.anthropic.com/v1
+#     api_key: ANTHROPIC_API_KEY
+#     engine_map:
+#       claude-3.5-sonnet: anthropic/claude-3-5-sonnet-20241022
+#       claude-3-opus: anthropic/claude-3-opus-20240229
+
+
+# ============================================================================
+# OPTION 3: Azure OpenAI (For Enterprise)
+# ============================================================================
+# llm_endpoints:
+#   - api_base: https://YOUR_RESOURCE_NAME.openai.azure.com
+#     api_version: "2024-02-15-preview"
+#     api_key: AZURE_OPENAI_API_KEY
+#     engine_map:
+#       gpt-4o: azure/your-deployment-name
+
+
+# ============================================================================
+# OPTION 4: Multiple Providers (Advanced)
+# ============================================================================
+# llm_endpoints:
+#   # OpenAI - Primary
+#   - api_base: https://api.openai.com/v1
+#     api_key: OPENAI_API_KEY
+#     engine_map:
+#       gpt-4o: gpt-4o
+#       gpt-3.5-turbo: gpt-3.5-turbo-0125
+#
+#   # Anthropic - Alternative
+#   - api_base: https://api.anthropic.com/v1
+#     api_key: ANTHROPIC_API_KEY
+#     engine_map:
+#       claude-3.5-sonnet: anthropic/claude-3-5-sonnet-20241022
+#
+#   # Mistral AI - Budget option
+#   - api_base: https://api.mistral.ai/v1
+#     api_key: MISTRAL_API_KEY
+#     engine_map:
+#       mistral-large: mistral/mistral-large-latest
+#       mistral-small: mistral/mistral-small-latest
+#
+#   # Together AI - Open source models
+#   - api_key: TOGETHER_API_KEY
+#     engine_map:
+#       llama-3-70b: together_ai/meta-llama/Meta-Llama-3-70B-Instruct
+
+
+# ============================================================================
+# OPTION 5: Local Models (No API Key Needed)
+# ============================================================================
+# Requires running a local LLM server (e.g., Ollama, LM Studio)
+# llm_endpoints:
+#   - api_base: http://127.0.0.1:5000/v1
+#     engine_map:
+#       local-llama: openai/local-model  # Must be OpenAI-compatible API

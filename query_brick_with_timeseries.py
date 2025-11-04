@@ -50,30 +50,38 @@ print(f"Total triples: {len(g)}")
 print(f"Using namespace: {BLDG}\n")
 
 # Now add CSV data (timeseries observations)
-MAX_ROWS = 100
+MAX_ROWS = 1000  # Increased to load more data including later dates
 csv_file = "LBNL_FDD_Dataset_FCU/FCU_FaultFree.csv" ### csv File Directory
 
 print(f"Loading CSV: {csv_file}")
-df = pd.read_csv(csv_file, nrows=MAX_ROWS)
-print(f"Loaded {len(df)} rows\n")
+# Load last N rows to get recent data (Dec 2018 instead of Jan 2018)
+df_full = pd.read_csv(csv_file)
+df = df_full.tail(MAX_ROWS)  # Get LAST 1000 rows (most recent data)
+print(f"Loaded last {len(df)} rows from {len(df_full)} total rows")
+print(f"Date range: {df['Datetime'].iloc[0]} to {df['Datetime'].iloc[-1]}\n")
 
 print("Converting CSV to RDF...")
 for idx, row in df.iterrows():
     timestamp_str = row['Datetime']
-    
+
+    # Convert timestamp from "12/31/2018 23:59" to ISO format for proper sorting
+    from datetime import datetime
+    dt = datetime.strptime(timestamp_str, "%m/%d/%Y %H:%M")
+    timestamp_iso = dt.strftime("%Y-%m-%dT%H:%M:%S")
+
     for column_name in df.columns:
         if column_name == 'Datetime':
             continue
-        
+
         value = row[column_name]
         if pd.isna(value):
             continue
-        
+
         obs_uri = BLDG[f"obs_{column_name}_{idx}"]
         sensor_uri = BLDG[column_name]
-        
+
         g.add((sensor_uri, REF.hasObservation, obs_uri))
-        g.add((obs_uri, REF.hasTimestamp, Literal(timestamp_str, datatype=XSD.string)))
+        g.add((obs_uri, REF.hasTimestamp, Literal(timestamp_iso, datatype=XSD.dateTime)))
         g.add((obs_uri, REF.hasValue, Literal(float(value), datatype=XSD.float)))
     
     if (idx + 1) % 20 == 0:
@@ -263,7 +271,7 @@ WHERE {
   ?sensor a brick:Entering_Water_Temperature_Sensor .
 }
 """
-run_query("8. Check if schema loaded (find Entering Water Temp sensors)", query8)
+# run_query("8. Check if schema loaded (find Entering Water Temp sensors)", query8)
 
 query9 = """
 
@@ -271,14 +279,31 @@ PREFIX brick: <https://brickschema.org/schema/Brick#>
 PREFIX bldg: <bldg-59#>
 PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
 
-SELECT ?timestamp ?value
+SELECT ?timestamp ?temperature
 WHERE {
-  bldg:FCU_CTRL ref:hasObservation ?obs .
-  ?obs ref:hasTimestamp ?timestamp .
-  ?obs ref:hasValue ?value .
+bldg:RM_TEMP ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?temperature .
 }
 ORDER BY ?timestamp
 LIMIT 10
+"""
+query9 = """
+
+
+PREFIX brick: <https://brickschema.org/schema/Brick#>
+PREFIX bldg: <bldg-59#>
+PREFIX ref: <https://brickschema.org/schema/Brick/ref#>
+
+SELECT ?timestamp ?speed
+WHERE {
+bldg:FCU_SPD ref:hasObservation ?obs .
+?obs ref:hasTimestamp ?timestamp .
+?obs ref:hasValue ?speed .
+}
+ORDER BY DESC(?timestamp)
+LIMIT 1
+
 """
 
 
